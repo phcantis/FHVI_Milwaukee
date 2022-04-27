@@ -180,7 +180,9 @@ usdm::vif(st_drop_geometry(select(MKE_ct_data_vulnerability, -c(ALAND, GEOID))))
 
 ### https://data.milwaukee.gov/dataset/parcel-outlines
 parcels_pre_1950 <- st_read("data/raw/MPROPArchive2021.shp") %>%
-  filter(FK_LandUse %in% c(8810, 8811, 8820, 8830, 8890, 8899) & YearBuilt > 1800 & YearBuilt < 1950) %>%
+  filter(FK_LandUse %in% c(8810, 8811, 8820, 8830, 8890, 8899) & YearBuilt > 1800) %>%
+  mutate(pre50 = case_when(YearBuilt < 1950 ~ "pre50",
+                           YearBuilt >= 1950 ~ "post50")) %>%
   st_transform(UTM_16N_meter) %>%
   st_join(select(MKE_ct_data_vulnerability, GEOID), largest = TRUE) %>%
   st_drop_geometry %>%
@@ -194,5 +196,10 @@ mprop <- read_csv("data/raw/mprop.csv") %>%
 parcels_pre_1950 <- inner_join(parcels_pre_1950, mprop)
 
 ct_pre50_dweellings <- parcels_pre_1950 %>%
-  dplyr::group_by(GEOID) %>% 
-  dplyr::summarise(pre50_res = sum(NR_UNITS))
+  dplyr::group_by(GEOID, pre50) %>% 
+  dplyr::summarise(n_res = sum(NR_UNITS, na.rm = TRUE)) %>%
+  pivot_wider(names_from = pre50, values_from = n_res) %>% 
+  mutate(total_res = sum(post50, pre50, na.rm = TRUE)) %>%
+  mutate(pct_pre50 = 100 * pre50 / total_res)
+
+MKE_ct_data_vulnerability <- left_join(MKE_ct_data_vulnerability, ct_pre50_dweellings)
