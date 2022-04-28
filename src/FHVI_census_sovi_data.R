@@ -178,7 +178,7 @@ usdm::vif(st_drop_geometry(select(MKE_ct_data_vulnerability, -c(ALAND, GEOID))))
 ## STEP 4: LOAD RESIDENTIAL PARCELS AND CALCULATE % BUILT PRE-1950 PER CENSUS TRACT
 ### RESIDENTIAL PARCELS BUILT BEFORE 1800 WILL BE EXCLUDED ASSSUMING DATA IS WR
 
-### https://data.milwaukee.gov/dataset/parcel-outlines
+### SPATIAL PARCEL DATA IS EXTRACTED FROM HERE https://data.milwaukee.gov/dataset/parcel-outlines
 parcels_pre_1950 <- st_read("data/raw/MPROPArchive2021.shp") %>%
   filter(FK_LandUse %in% c(8810, 8811, 8820, 8830, 8890, 8899) & YearBuilt > 1800) %>%
   mutate(pre50 = case_when(YearBuilt < 1950 ~ "pre50",
@@ -188,8 +188,7 @@ parcels_pre_1950 <- st_read("data/raw/MPROPArchive2021.shp") %>%
   st_drop_geometry %>%
   rename(TAXKEY = Taxkey)
 
-### ADDITIONAL PARCEL DATA WITH RESIDENTIAL UNITS NR
-### https://data.milwaukee.gov/dataset/mprop 
+### ADDITIONAL PARCEL DATA WITH RESIDENTIAL UNITS NR EXTRACTED FROM HERE https://data.milwaukee.gov/dataset/mprop 
 mprop <- read_csv("data/raw/mprop.csv") %>% 
   select(c(TAXKEY, NR_UNITS))
 
