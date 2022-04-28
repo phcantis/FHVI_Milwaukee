@@ -210,3 +210,6 @@ MKE_ct_data_vulnerability_housing <- filter(MKE_ct_data_vulnerability_housing,
                                     (GEOID %in% (st_centroid(MKE_ct_data_vulnerability_housing)[city_limit,]$GEOID)) & 
                                       GEOID != 55079060200)
 
+st_write(MKE_ct_data_vulnerability_housing, 
+         "data/intermediate/selected_sovi_variables.shp",
+         delete_dsn = TRUE)
