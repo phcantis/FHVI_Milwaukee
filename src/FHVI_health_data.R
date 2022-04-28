@@ -191,6 +191,12 @@ chart.Correlation(select(df_correlate, c(addiab_rate, poormh_rate, asthma_rate))
 #### % ADULTS THAT REPORTED POOR MENTAL HEALTH DURING THE PAST 14 DAYS
 #### AGE-ADJUSTED ER RATES DUE TO ASTHMA PER 10,000 PEOPLE
 
+### BEFORE SAVING, LETS FILTER OUT CTs AND KEEP THE 210 CTs THAT LIE WITHIN MKE's BOUNDARY
+
+MWK_health_data <- filter(MWK_health_data,
+                          (GEOID %in% (st_centroid(MWK_health_data)[city_limit,]$GEOID)) & 
+                            GEOID != 55079060200)
+
 st_write(select(MWK_health_data, c(addiab_rate, poormh_rate, asthma_rate)),
          "data/intermediate/selected_health_variables.shp",
          delete_dsn = TRUE)

@@ -200,6 +200,13 @@ ct_pre50_dweellings <- parcels_pre_1950 %>%
   dplyr::summarise(n_res = sum(NR_UNITS, na.rm = TRUE)) %>%
   pivot_wider(names_from = pre50, values_from = n_res) %>% 
   mutate(total_res = sum(post50, pre50, na.rm = TRUE)) %>%
+  mutate(pre50 = case_when(is.na(pre50) ~ 0,
+                           !is.na(pre50)~ pre50)) %>%
   mutate(pct_pre50 = 100 * pre50 / total_res)
 
-MKE_ct_data_vulnerability <- left_join(MKE_ct_data_vulnerability, ct_pre50_dweellings)
+MKE_ct_data_vulnerability_housing <- left_join(MKE_ct_data_vulnerability, ct_pre50_dweellings)
+
+MKE_ct_data_vulnerability_housing <- filter(MKE_ct_data_vulnerability_housing, 
+                                    (GEOID %in% (st_centroid(MKE_ct_data_vulnerability_housing)[city_limit,]$GEOID)) & 
+                                      GEOID != 55079060200)
+

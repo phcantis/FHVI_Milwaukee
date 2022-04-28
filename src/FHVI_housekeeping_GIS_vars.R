@@ -10,6 +10,8 @@ options(scipen=999)
 UTM_16N_meter <- "EPSG:26916"
 epsg_latlon <- "EPSG:4326"
 
+city_limit <- st_read("data/raw/citylimit.shp") %>% st_transform(UTM_16N_meter)
+
 normalize <- function(x, output_range=c(0,1)) {
   
   a <- output_range[1]
