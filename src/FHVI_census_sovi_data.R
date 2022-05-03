@@ -115,13 +115,6 @@ MKE_ACS2019_selection <- MKE_ACS2019 %>%
                              hh_m_livalone_e)/total_hh_livealone_e) %>%
   select(GEOID, ALAND, belpov200, no_diploma, no_hins, lan_isol, disability, hh_no_car, live_alone)
 
-
-MKE_cen10 <- get_decennial(geography = "tract", variables = vi10_Total[1], 
-                               state = "WI", county = "Milwaukee", year = 2010, 
-                               geometry = TRUE) %>% 
-  select(-variable, -NAME) %>% 
-  rename (!!vi10_Total[2] := value)
-
 for(var in decennial_vars){
   
   print(var[2])
@@ -204,10 +197,6 @@ ct_pre50_dweellings <- parcels_pre_1950 %>%
   mutate(pct_pre50 = 100 * pre50 / total_res)
 
 MKE_ct_data_vulnerability_housing <- left_join(MKE_ct_data_vulnerability, ct_pre50_dweellings)
-
-MKE_ct_data_vulnerability_housing <- filter(MKE_ct_data_vulnerability_housing, 
-                                    (GEOID %in% (st_centroid(MKE_ct_data_vulnerability_housing)[city_limit,]$GEOID)) & 
-                                      GEOID != 55079060200)
 
 st_write(MKE_ct_data_vulnerability_housing, 
          "data/intermediate/selected_sovi_variables.shp",
