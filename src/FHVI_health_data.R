@@ -21,37 +21,37 @@ source("src/FHVI_housekeeping_GIS_vars.R")
 adults_with_cancer_ct <- read.csv("data/raw/adults_with_cancer_ct_2019.csv",
                                   stringsAsFactors = FALSE) %>%
   filter(Period.of.Measure == 2019) %>% 
-  select(ct = Location, 
+  select(GEOID = Location, 
          cancer_rate = Indicator.Rate.Value)
 
 adults_experienced_heart_disease_ct <- read.csv("data/raw/adults_who_experienced_coronary_heart_disease_ct_2019.csv",
                                          stringsAsFactors = FALSE) %>%
   filter(Period.of.Measure == 2019) %>% 
-  select(ct = Location, 
+  select(GEOID = Location, 
          heartdis_rate = Indicator.Rate.Value)
 
 adults_with_copd_ct <- read.csv("data/raw/adults_with_copd_ct_2019.csv",
                                 stringsAsFactors = FALSE) %>%
   filter(Period.of.Measure == 2019) %>% 
-  select(ct = Location, 
+  select(GEOID = Location, 
          copd_rate = Indicator.Rate.Value)
 
 adults_with_kidney_disease_ct <- read.csv("data/raw/adults_with_kidney_disease_ct_2019.csv",
                                           stringsAsFactors = FALSE) %>%
   filter(Period.of.Measure == 2019) %>% 
-  select(ct = Location, 
+  select(GEOID = Location, 
          kidneyd_rate = Indicator.Rate.Value)
 
 adults_with_diabetes_ct <- read.csv("data/raw/adults_with_diabetes_ct_2019.csv",
                                           stringsAsFactors = FALSE) %>%
   filter(Period.of.Measure == 2019) %>% 
-  select(ct = Location, 
+  select(GEOID = Location, 
          addiab_rate = Indicator.Rate.Value)
 
 adults_with_poor_mental_health_ct <- read.csv("data/raw/adults_poor_mental_health_ct_2019.csv",
                                     stringsAsFactors = FALSE) %>%
   filter(Period.of.Measure == 2019) %>% 
-  select(ct = Location, 
+  select(GEOID = Location, 
          poormh_rate = Indicator.Rate.Value)
 
 adult_mental_health_er_rate_zcs <- read.csv("data/raw/adult_mental_health_er_rate_zcs_2018_2020.csv",
@@ -107,20 +107,20 @@ ct_data <- adults_experienced_heart_disease_ct %>%
   left_join(adults_with_kidney_disease_ct) %>% 
   left_join(adults_with_diabetes_ct) %>%
   left_join(adults_with_poor_mental_health_ct) %>%
-  mutate(ct = as.character(ct))
+  mutate(GEOID = as.character(GEOID))
 
 ### DOWNLOAD GEOMETRIES FOR CENSUS TRACTS - AFTER CHECKING FOR DATA CONSISTENCY, IT SEEMS LIKE THE 
 ### APPROPRIATE CENSUS TRACTS TO PERFORM THE JOINS TO THE DATA ARE THE ONES LINKED TO THE 2010 CENSUS.
 
-ct_data <- inner_join(
-  st_make_valid(select(tigris::tracts(state = "Wisconsin", "Milwaukee", year = 2010), ct=GEOID10)),
+ct_data <- inner_join(select(MKE_cen10, GEOID),
   ct_data)
 
 ### ZIP CODE DATA, ON THE OTHER HAND, SEEMS TO REQUIRE THE ZCTAs FROM THE 2000 CENSUS.
 
 zcs_data <- inner_join(
   st_make_valid(select(tigris::zctas(year=2000, state = "Wisconsin"), zcs = ZCTA5CE00)),
-  zcs_data)
+  zcs_data) %>% 
+  st_transform(UTM_16N_meter)
 
 ### TO CONVERT DATA FROM ZIP CODE TO CENSUS TRACT, WE WILL CARRY OUT AN AREAL WEIGHED INTERPOLATION. THIS 
 ### METHODOLOGY IS NOT PERFECT, SINCE IT WILL WEIGH AREAS THAT MAY NOT HAVE POPULATION (E.G. PARKS). HOWEVER,
@@ -146,7 +146,7 @@ st_write(MWK_health_data,
 
 ### DROP GEOMETRY AND CT CODES
 df_correlate <- MWK_health_data %>% 
-  select(-c(ct)) %>%
+  select(-c(GEOID)) %>%
   st_drop_geometry
 
 ### CORRELATION MATRIX
@@ -191,13 +191,7 @@ chart.Correlation(select(df_correlate, c(addiab_rate, poormh_rate, asthma_rate))
 #### % ADULTS THAT REPORTED POOR MENTAL HEALTH DURING THE PAST 14 DAYS
 #### AGE-ADJUSTED ER RATES DUE TO ASTHMA PER 10,000 PEOPLE
 
-### BEFORE SAVING, LETS FILTER OUT CTs AND KEEP THE 210 CTs THAT LIE WITHIN MKE's BOUNDARY
-
-MWK_health_data <- filter(MWK_health_data,
-                          (GEOID %in% (st_centroid(MWK_health_data)[city_limit,]$GEOID)) & 
-                            GEOID != 55079060200)
-
-st_write(select(MWK_health_data, c(addiab_rate, poormh_rate, asthma_rate)),
+st_write(select(MWK_health_data, c(GEOID, addiab_rate, poormh_rate, asthma_rate)),
          "data/intermediate/selected_health_variables.shp",
          delete_dsn = TRUE)
 
