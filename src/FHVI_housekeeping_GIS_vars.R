@@ -1,5 +1,5 @@
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(data.table, readxl, ggcorrplot, PerformanceAnalytics, usdm, stars, geojsonsf, geojsonio, raster, tidyr, ggplot2, ggthemes, ggpubr, gdalUtils, sf, dplyr, tidycensus, tidyverse)
+pacman::p_load(data.table, nngeo, readxl, ggcorrplot, PerformanceAnalytics, usdm, stars, geojsonsf, geojsonio, terra, tidyr, ggplot2, ggthemes, ggpubr, gdalUtils, sf, dplyr, tidycensus, tidyverse)
 
 options(tigris_class = "sf")
 
@@ -9,8 +9,21 @@ options(scipen=999)
 
 UTM_16N_meter <- "EPSG:26916"
 epsg_latlon <- "EPSG:4326"
+proj <- "+proj=utm +zone=16 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
 
-city_limit <- st_read("data/raw/citylimit.shp") %>% st_transform(UTM_16N_meter)
+
+city_limit <- st_read("data/raw/Milwaukee_City_Boundary.shp") %>% st_transform(UTM_16N_meter)
+model_boundaries <- st_read("data/raw/open_boundaries.shp") %>%  st_transform(UTM_16N_meter)
+
+vi10_Total <- c("P009001", "tot_pop_cen10")
+MKE_cen10 <- get_decennial(geography = "tract", variables = vi10_Total[1], 
+                           state = "WI", county = "Milwaukee", year = 2010, 
+                           geometry = TRUE) %>% 
+  select(-variable, -NAME) %>% 
+  rename (!!vi10_Total[2] := value) %>%
+  st_transform(UTM_16N_meter) %>%
+  filter((GEOID %in% (st_centroid(.)[city_limit,]$GEOID)) & 
+           GEOID != 55079060200)
 
 normalize <- function(x, output_range=c(0,1)) {
   
