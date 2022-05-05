@@ -104,8 +104,47 @@ st_write(res_parcels,
          "data/intermediate/res_parcels_exposure.shp",
          delete_dsn = TRUE)
 
-# summarize to GEOID level (% total nr units affected)
+# SUMMARIZE TO GEOID LEVEL (% UNITS EXPOSED TO FLOODING)
+exposed_units_GEOID <- res_parcels %>%
+  st_drop_geometry() %>%
+  mutate(is_exposed = case_when(d_f <= 30 ~ "exposed",
+                             d_f > 30 ~ "unexposed")) %>%
+  dplyr::group_by(GEOID, is_exposed) %>%
+  dplyr::summarise(n_res = sum(NR_UNITS, na.rm = TRUE)) %>%
+  pivot_wider(names_from = is_exposed, values_from = n_res) %>% 
+  mutate(total_res = sum(exposed, unexposed, na.rm = TRUE)) %>%
+  mutate(exposed = case_when(is.na(exposed) ~ 0,
+                             !is.na(exposed)~ exposed)) %>%
+  mutate(pct_exposed = 100 * exposed / total_res)
 
 ### EXPOSURE BY ROAD
+roads <- st_read("data/raw/TopoPlanimetric_-_Transportation_Polygons.shp") %>% 
+  st_transform(UTM_16N_meter) %>% 
+  st_make_valid() %>% 
+  st_intersection(MKE_cen10) %>%
+  filter(subtypenam %in% c("Paved Driveway", "Paved Parking", "Paved Road", "Paved Shoulder", "Unimproved Road", "Unpaved Driveway", "Unpaved Parking", "Unpaved Shoulder")) %>%
+  mutate(road_m2 = as.numeric(st_area(.)))
+
+# int_roads_flood_layer <- flood_layer %>%
+#   st_intersection(roads) %>%
+#   mutate(flood_m2 = as.numeric(st_area(.))) %>%
+#   st_drop_geometry() %>%
+#   select(GEOID, flood_m2)
+# 
+# write_csv(int_roads_flood_layer, "data/intermediate/int_roads_flood_layer.csv")
+
+int_roads_flood_layer <- read_csv("data/intermediate/int_roads_flood_layer.csv")
+
+flood_roads_areas_GEOID <- int_roads_flood_layer %>%
+  group_by(GEOID) %>%
+  summarize(flood_m2 = sum(flood_m2, na.rm = TRUE))
+
+road_areas_GEOID <- roads %>%
+  st_drop_geometry() %>%
+  group_by(GEOID) %>%
+  summarize(road_m2 = sum(road_m2, na.rm = TRUE)) %>% 
+  inner_join(flood_roads_areas_GEOID) %>%
+  mutate(pct_road_flood = 100 * flood_m2/ road_m2)
 
 ### EXPOSURE OF BROWNFIELDS
+
