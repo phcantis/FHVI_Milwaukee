@@ -199,5 +199,5 @@ ct_pre50_dweellings <- parcels_pre_1950 %>%
 MKE_ct_data_vulnerability_housing <- left_join(MKE_ct_data_vulnerability, ct_pre50_dweellings)
 
 st_write(MKE_ct_data_vulnerability_housing, 
-         "data/intermediate/selected_sovi_variables.shp",
+         "data/intermediate/selected/selected_sovi_variables.shp",
          delete_dsn = TRUE)

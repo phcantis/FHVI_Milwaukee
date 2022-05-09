@@ -7,13 +7,16 @@
 
 ## STEPS TAKEN:
 
-## STEP 1: 
-## STEP 2: 
-## STEP 3: 
+## STEP 1: LOAD FLOODING DATA AND CREATE A SINGLE FLOOD RISK LAYERS
+## STEP 2: OVERLAY FLOOD RISK LAYER WITH RESIDENTIAL UNITS - CALCULATE PERCENTAGE UNITS IMPACTED PER CENSUS TRACT
+## STEP 3: OVERLAY FLOOD RISK LAYER WITH ROADS - CALCULATE PERCENTAGE ROAD AREA IMPACTED PER CENSUS TRACT
+## STEP 4: OVERLAY FLOOD RISK LAYER WITH BROWNFIELDS - CALCULATE PERCENTAGE BROWNFIELDS IMPACTED PER CENSUS TRACT
 
 source("src/FHVI_housekeeping_GIS_vars.R")
 
-## LOAD FLOODING DATA AND REMOVE WATER BODIES // USE MODEL BOUNDARIES TO SUBSET DATA
+## STEP 1: LOAD FLOODING DATA AND CREATE A SINGLE FLOOD RISK LAYERS
+
+### LOAD FLOODING DATA FROM SURFACE MODELING AND REMOVE WATER BODIES // USE MODEL BOUNDARIES TO SUBSET DATA
 
 depth100 <- rast("data/raw/R100_C1_max_depth_LZW.tiff") 
 crs(depth100) <- proj
@@ -34,12 +37,16 @@ depth100_sf <- st_as_sf(st_as_stars(depth100)) %>%
 rm(depth100)
 gc()
 
+## FEMA SPECIAL FLOOD HAZARD AREA
+
 fema_fp <- st_read("data/raw/Wisconsin_NFHL_55_20220303/NFHL_55_20220303.gdb", layer = "S_FLD_HAZ_AR") %>% 
   filter(SFHA_TF == "T") %>% 
   st_transform(UTM_16N_meter) %>% 
   st_intersection(model_boundaries) %>% 
   st_cast("MULTIPOLYGON") %>% 
   st_cast("POLYGON")
+
+## SINKS LAYER BY MMSD WILL BE LEFT UNUSED FOR NOW
 
 # sink_points <- st_read("data/raw/points_closed_depressions/Depression_Pt.shp") %>% 
 #   st_transform(UTM_16N_meter) %>%
@@ -62,7 +69,9 @@ flood_layer <- rbind(st_as_sf(st_geometry(depth100_sf)),
 rm(fema_fp, depth100_sf, water, waterAreas, waterbodies)
 gc()
 
-### EXPOSURE TO RESIDENTIAL PARCELS
+## STEP 2: OVERLAY FLOOD RISK LAYER WITH RESIDENTIAL UNITS - CALCULATE PERCENTAGE UNITS IMPACTED PER CENSUS TRACT
+
+### PARCELS NEED TO BE SPATIALLY JOINED TO CENSUS TRACTS LAYER FOR THE MTO HAVE A GEOID 
 
 res_parcels <- st_read("data/raw/MPROPArchive2021.shp") %>%
   filter(FK_LandUse %in% c(8810, 8811, 8820, 8830, 8890, 8899)) %>%
@@ -82,6 +91,8 @@ res_parcels_naGEOID <- res_parcels_GEOID %>%
   st_join(., select(MKE_cen10, GEOID), join = st_nn, maxdist = 120) %>% 
   st_drop_geometry()
 
+### MERGE THE TWO SUBSETS OF RESIDENTIAL PARCELS MAINTAINING A SINGLE GEOID FIELD
+
 res_parcels_GEOID <- res_parcels_GEOID %>%
   left_join(res_parcels_naGEOID, by = "TAXKEY") %>%
   mutate(GEOID = ifelse(.$GEOID.y %in% res_parcels_naGEOID$GEOID, .$GEOID.y, res_parcels_GEOID$GEOID)) %>% 
@@ -96,7 +107,12 @@ mprop <- read_csv("data/raw/mprop.csv") %>%
 ### LEFT JOIN WITH NR UNITS DATA SO THAT NAs ARE REPLACED WITH 1 
 ### AT LEAST THIS WAY WE ENSURE THEY ARE NOT LOST
 res_parcels <- left_join(res_parcels, mprop, by = "TAXKEY") %>% 
-  replace_na(list(NR_UNITS = 1))
+  mutate(NR_UNITS = case_when(!is.na(NR_UNITS) ~ NR_UNITS,
+                              (is.na(NR_UNITS) & FK_LandUse == 8810) ~ 1,
+                              (is.na(NR_UNITS) & FK_LandUse == 8811) ~ 1,
+                              (is.na(NR_UNITS) & FK_LandUse == 8820) ~ 2,
+                              (is.na(NR_UNITS) & FK_LandUse == 8830) ~ 3,
+                              (is.na(NR_UNITS) & FK_LandUse == 8899) ~ 1))
 
 res_parcels <- write_closest_flooding(res_parcels, flood_layer, "d_f", centroids = FALSE)
 
@@ -117,7 +133,8 @@ exposed_units_GEOID <- res_parcels %>%
                              !is.na(exp_unit)~ exp_unit)) %>%
   mutate(pct_exp_unit = 100 * exp_unit / total_res)
 
-### EXPOSURE BY ROAD
+## STEP 3: OVERLAY FLOOD RISK LAYER WITH ROADS - CALCULATE PERCENTAGE ROAD AREA IMPACTED PER CENSUS TRACT
+
 roads <- st_read("data/raw/TopoPlanimetric_-_Transportation_Polygons.shp") %>% 
   st_transform(UTM_16N_meter) %>% 
   st_make_valid() %>% 
@@ -147,9 +164,7 @@ road_areas_GEOID <- roads %>%
   inner_join(flood_roads_areas_GEOID) %>%
   mutate(pct_road_flood = 100 * flood_m2/ road_m2)
 
-### EXPOSURE OF BROWNFIELDS
-
-# Superfund sites
+## STEP 4: OVERLAY FLOOD RISK LAYER WITH BROWNFIELDS - CALCULATE PERCENTAGE BROWNFIELDS IMPACTED PER CENSUS TRACT
 
 solid_waste_landfills_historics <- st_read("data/raw/polluted_points/Solid_Waste_%E2%80%93_Landfills_and_Historic_Waste_Site_Points.shp") %>%
   st_transform(UTM_16N_meter) %>%
@@ -200,5 +215,5 @@ exposure_GEOID <- MKE_cen10 %>%
   relocate(geometry, .after = last_col())
 
 st_write(exposure_GEOID,
-         "data/intermediate/selected_exposure_variables.shp",
+         "data/intermediate/selected/selected_exposure_variables.shp",
          delete_dsn = TRUE)

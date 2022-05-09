@@ -192,7 +192,7 @@ chart.Correlation(select(df_correlate, c(addiab_rate, poormh_rate, asthma_rate))
 #### AGE-ADJUSTED ER RATES DUE TO ASTHMA PER 10,000 PEOPLE
 
 st_write(select(MWK_health_data, c(GEOID, addiab_rate, poormh_rate, asthma_rate)),
-         "data/intermediate/selected_health_variables.shp",
+         "data/intermediate/selected/selected_health_variables.shp",
          delete_dsn = TRUE)
 
 # PCA 
