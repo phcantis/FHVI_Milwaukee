@@ -107,15 +107,15 @@ st_write(res_parcels,
 # SUMMARIZE TO GEOID LEVEL (% UNITS EXPOSED TO FLOODING)
 exposed_units_GEOID <- res_parcels %>%
   st_drop_geometry() %>%
-  mutate(is_exposed = case_when(d_f <= 30 ~ "exposed",
-                             d_f > 30 ~ "unexposed")) %>%
+  mutate(is_exposed = case_when(d_f <= 30 ~ "exp_unit",
+                             d_f > 30 ~ "unexp_unit")) %>%
   dplyr::group_by(GEOID, is_exposed) %>%
   dplyr::summarise(n_res = sum(NR_UNITS, na.rm = TRUE)) %>%
   pivot_wider(names_from = is_exposed, values_from = n_res) %>% 
-  mutate(total_res = sum(exposed, unexposed, na.rm = TRUE)) %>%
-  mutate(exposed = case_when(is.na(exposed) ~ 0,
-                             !is.na(exposed)~ exposed)) %>%
-  mutate(pct_exposed = 100 * exposed / total_res)
+  mutate(total_res = sum(exp_unit, unexp_unit, na.rm = TRUE)) %>%
+  mutate(exp_unit = case_when(is.na(exp_unit) ~ 0,
+                             !is.na(exp_unit)~ exp_unit)) %>%
+  mutate(pct_exp_unit = 100 * exp_unit / total_res)
 
 ### EXPOSURE BY ROAD
 roads <- st_read("data/raw/TopoPlanimetric_-_Transportation_Polygons.shp") %>% 
@@ -133,7 +133,8 @@ roads <- st_read("data/raw/TopoPlanimetric_-_Transportation_Polygons.shp") %>%
 # 
 # write_csv(int_roads_flood_layer, "data/intermediate/int_roads_flood_layer.csv")
 
-int_roads_flood_layer <- read_csv("data/intermediate/int_roads_flood_layer.csv")
+int_roads_flood_layer <- read_csv("data/intermediate/int_roads_flood_layer.csv") %>%
+  mutate(GEOID = as.character(GEOID))
 
 flood_roads_areas_GEOID <- int_roads_flood_layer %>%
   group_by(GEOID) %>%
@@ -148,3 +149,56 @@ road_areas_GEOID <- roads %>%
 
 ### EXPOSURE OF BROWNFIELDS
 
+# Superfund sites
+
+solid_waste_landfills_historics <- st_read("data/raw/polluted_points/Solid_Waste_%E2%80%93_Landfills_and_Historic_Waste_Site_Points.shp") %>%
+  st_transform(UTM_16N_meter) %>%
+  st_intersection(select(MKE_cen10, GEOID)) %>%
+  mutate(type = "Solid waste landfill, active or historic") %>%
+  select(GEOID, type) %>%
+  write_closest_flooding(., flooding = flood_layer, name_field = "d_f")
+
+open_remediation_sites <- st_read("data/raw/polluted_points/Remediation_-_Open_Site_Points.shp") %>%
+  st_transform(UTM_16N_meter) %>%
+  st_intersection(select(MKE_cen10, GEOID)) %>%
+  mutate(type = "Open remediation site") %>%
+  select(GEOID, type) %>%
+  write_closest_flooding(., flooding = flood_layer, name_field = "d_f")
+
+superfund_sites <- st_read("data/raw/polluted_points/WI_Superfund_NPL_Site_Points_2022.shp") %>%
+  st_transform(UTM_16N_meter) %>%
+  st_intersection(select(MKE_cen10, GEOID)) %>%
+  mutate(type = "Superfund site") %>%
+  select(GEOID, type) %>%
+  write_closest_flooding(., flooding = flood_layer, name_field = "d_f")
+
+polluted_sites <- rbind (solid_waste_landfills_historics, 
+                         open_remediation_sites,
+                         superfund_sites)
+
+st_write(polluted_sites, 
+         "data/intermediate/polluted_sites.shp",
+         delete_dsn = TRUE)
+
+polluted_sites_GEOID <- polluted_sites %>%
+  st_drop_geometry() %>%
+  mutate(is_exposed = case_when(d_f <= 30 ~ "exp_site",
+                                d_f > 30 ~ "unexp_site")) %>%
+  group_by(GEOID, is_exposed) %>%
+  summarise(total_sites = n()) %>%
+  pivot_wider(names_from = is_exposed, values_from = total_sites) %>%
+  mutate(total_sites = sum(exp_site, unexp_site, na.rm = TRUE)) %>%
+  replace_na(list(exp_site = 0, unexp_site = 0)) %>%
+  mutate(pct_exp_site = 100 * exp_site / total_sites)
+
+exposure_GEOID <- MKE_cen10 %>%
+  select(GEOID) %>%
+  left_join(exposed_units_GEOID) %>%
+  left_join(road_areas_GEOID) %>%
+  left_join(polluted_sites_GEOID) %>%
+  replace_na(list(exp_site = 0, unexp_site = 0, total_sites = 0, pct_exp_site = 0)) %>%
+  relocate(geometry, .after = last_col())
+
+st_write(exposure_GEOID,
+         "data/intermediate/selected_exposure_variables.shp",
+         delete_dsn = TRUE)
