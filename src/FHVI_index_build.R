@@ -6,13 +6,12 @@
 
 ## STEPS TAKEN:
 
-## STEP 1: 
-## STEP 2: 
-## STEP 3: 
+## STEP 1: LOAD THE 4 CATEGORIES CONSIDERED, MERGE INTO A SINGLE DATASET AND RENAME INDICATORS BY CATEGORY
+## STEP 2: NORMALIZE, GROUP AND BLEND THE INDICATORS WITHIN EACH CATEGORY
 
 source("src/FHVI_housekeeping_GIS_vars.R")
 
-## STEP 1: TO LOAD THE 4 CATEGORIES CONSIDERED, MERGE INTO A SINGLE DATASET AND RENAME INDICATORS BY CATEGORY
+## STEP 1: LOAD THE 4 CATEGORIES CONSIDERED, MERGE INTO A SINGLE DATASET AND RENAME INDICATORS BY CATEGORY
 ### CATEGORIES: SOCIOECONOMIC VULNERABILITY, HEALTH, HOUSING, EXPOSURE
 
 SES <- st_read("data/intermediate/selected/selected_sovi_variables.shp")
@@ -48,6 +47,8 @@ indicators_FHVI <- health %>%
 
 ### attempt 1 --> create normalized additions for each category
 
+## STEP 2: NORMALIZE, GROUP AND BLEND THE INDICATORS WITHIN EACH CATEGORY
+
 indicators_FHVI <- indicators_FHVI %>% 
   mutate(HV = normalize(HV_AdultDiabetesRate, output_range = c(0,100)) +
            normalize(HV_PoorMentalHealthRate, output_range = c(0,100)) +
@@ -55,13 +56,13 @@ indicators_FHVI <- indicators_FHVI %>%
            normalize(HV_Disability, output_range = c(0,100)) +
            normalize(HV_NoHIns, output_range = c(0,100)),
          SEV = normalize(SEV_BelPovx2, output_range = c(0,100)) +
-                           normalize(SEV_NoDiploma, output_range = c(0,100)) +
-                           normalize(SEV_LangIsol, output_range = c(0,100)) +
-                           normalize(SEV_BIPOC, output_range = c(0,100)) +
-                           normalize(SEV_VulnAge, output_range = c(0,100)),
+           normalize(SEV_NoDiploma, output_range = c(0,100)) +
+           normalize(SEV_LangIsol, output_range = c(0,100)) +
+           normalize(SEV_BIPOC, output_range = c(0,100)) +
+           normalize(SEV_VulnAge, output_range = c(0,100)),
          HoV = normalize(HoV_LiveAlone, output_range = c(0,100)) +
-                           normalize(HoV_Pre50, output_range = c(0,100)) +
-                           normalize(HoV_HHNoCar, output_range = c(0,100)),
+           normalize(HoV_Pre50, output_range = c(0,100)) +
+           normalize(HoV_HHNoCar, output_range = c(0,100)),
          EXP_RES = normalize(EXP_ExpHUnits, output_range = c(0,100)),
          EXP_ROAD = normalize(EXP_ExpRoadArea, output_range = c(0,100)),
          EXP_SITES = normalize(EXP_PSites, output_range = c(0,100))) %>%
