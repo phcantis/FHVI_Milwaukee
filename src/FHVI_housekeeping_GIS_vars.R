@@ -218,40 +218,32 @@ mapper_function_quintile <- function(data_df, fieldname, map_title, legend_posit
   
 }
 
-mapper_function_equal_breaks <- function(data_df, fieldname, map_title, legend_position="none", title_size=36, n_breaks=5){
-  
-  
-  if(n_breaks == 5)  {
-    scale_palette <- c("#CCE0EB", "#99C2D6", "#67A3C2","#3485AD", "#016699")
-    my_breaks <- c(0, 0.2, 0.4, 0.6, 0.8, 1)
-  } else if (n_breaks == 4) {
-    scale_palette <- c("#CCE0EB", "#99C2D6","#3485AD", "#016699")
-    my_breaks <- c(0, 0.25, 0.5, 0.75)
-  } else if (n_breaks== 3) {
-    scale_palette <- c("#CCE0EB", "#67A3C2","#016699")
-    my_breaks <- c(0, 0.33, 0.4)
-  } else if (n_breaks == 2) {
-    scale_palette <- c("#CCE0EB", "#016699")
-    my_breaks <- c(0, 0.5)
-  }
-  
+mapper_function_0_100 <- function(data_sf, 
+                                  fieldname, 
+                                  plot_title = "", 
+                                  nbreaks = 5, 
+                                  palette = "Lajolla", 
+                                  breaks = c(0, 20, 40, 60, 80, 100), 
+                                  breaks_labels = c("", "Very Low", "Low", "High", "Very High", ""),
+                                  legend_name=""){
   plot <- ggplot() +
-    geom_sf(data = data_df, aes_string(fill = fieldname)) +
+    geom_sf(data = data_sf, aes_string(fill = fieldname)) +
     theme_map() +
-    theme(title = element_text(size = title_size),
-          legend.position = legend_position,
-          legend.text = element_text(size = 25),
+    theme(title = element_text(size = 26),
+          legend.position = "right",
+          legend.text = element_text(size = 15),
           legend.title = element_text(size = 30),
           legend.spacing.x = unit(0.2, "cm"),
-          legend.key.size = unit(2, "cm")) + 
-    labs(title = map_title) +
-    scale_fill_gradientn(colours = scale_palette, 
-                         breaks = my_breaks,
-                         labels = my_breaks,
-                         name= "Hotspot \nScore")
+          legend.key.size = unit(1, "cm",),
+          plot.background = element_rect(fill = "white")) + 
+    labs(title = plot_title) +
+    scale_fill_gradientn(colours = palette, 
+                         breaks = breaks,
+                         labels = breaks_labels,
+                         name= legend_name,
+                         limits = c(0,100))
   
   return(plot)
-  
 }
 
 mapper_legender_frame <- function(data_df, fieldname, legend_position="top", text_size=25, text_title_size=30, legend_name="Quintile", key_size_cm=1.5, div_quint=1){
