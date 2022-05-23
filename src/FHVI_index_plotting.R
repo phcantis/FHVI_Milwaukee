@@ -103,7 +103,7 @@ ggsave(filename = "data/output/EXP_HOTSPOTS.png",
        limitsize = FALSE)
 
 
-### Plot Flood Layer + brownfields
+### Plot Flood Layer + brownfields 
 
 depth100 <- rast("data/raw/R100_C1_max_depth_LZW.tiff") 
 crs(depth100) <- proj
