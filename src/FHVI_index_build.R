@@ -83,7 +83,7 @@ indicators_FHVI <- indicators_FHVI %>%
   mutate(V_Q5_sum = (HV_Q5 + SEV_Q5 + HoV_Q5)/(5*3),
          EXP_Q5_sum = (EXP_RES_Q5 + EXP_ROAD_Q5)/(5*2)) %>%
   mutate(V_x_EXP_Q5 = V_Q5_sum * EXP_Q5_sum,
-         V_x_EXP_n = V_n_sum * EXP_n_sum)
+         V_x_EXP_n = normalize((V_n_sum * EXP_n_sum), output_range = c(0,100)))
 
 st_write(indicators_FHVI, 
          "data/output/final_FHVI.geojson",
