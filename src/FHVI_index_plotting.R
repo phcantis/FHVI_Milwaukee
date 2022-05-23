@@ -4,11 +4,6 @@
 
 ## GOAL: TO PRODUCE A VULNERABILITY INDEX FOR EACH OF THE CATEGORIES CONSIDERED AND CARRY OUT A SPATIAL ANALYSIS
 
-## STEPS TAKEN:
-
-## STEP 1:
-## STEP 2:
-
 source("src/FHVI_housekeeping_GIS_vars.R")
 
 ## STEP 1: 
@@ -88,6 +83,26 @@ ggsave(filename = "data/output/FHVI_x_n.png",
        units = "cm",
        limitsize = FALSE)
 
+indicators_FHVI$Hotspot_SV <- hotspot_classifier(indicators_FHVI, "V_n_sum", threshold = 0.75)
+indicators_FHVI$Hotspot_EXP <- hotspot_classifier(indicators_FHVI, "EXP_n_sum", threshold = 0.75)
+
+mapper_function_quintile(indicators_FHVI, fieldname = "Hotspot_SV", legend_position = "none", map_title="SVI \nHotspots", palette = rev(sequential_hcl(5, "Reds")))
+ggsave(filename = "data/output/SVI_HOTSPOTS.png", 
+       dpi = 1000,
+       width = 15,
+       height = 22,
+       units = "cm",
+       limitsize = FALSE)
+
+mapper_function_quintile(indicators_FHVI, fieldname = "Hotspot_EXP", legend_position = "none", map_title="Exposure \nHotspots", palette = rev(sequential_hcl(5, "Blues")))
+ggsave(filename = "data/output/EXP_HOTSPOTS.png", 
+       dpi = 1000,
+       width = 15,
+       height = 22,
+       units = "cm",
+       limitsize = FALSE)
+
+
 ### Plot Flood Layer + brownfields
 
 depth100 <- rast("data/raw/R100_C1_max_depth_LZW.tiff") 
@@ -129,7 +144,7 @@ ggplot() +
                              labels = c(0, 20, 40, 60, 80, 100),
                              name = "% Sites Exposed",
                              limits = c(0,100)) +
-        geom_sf(data = depth100_sf, fill = "#016699", color = NA) +
+        geom_sf(data = depth100_sf, fill = "#1a8bc4", color = NA) +
         geom_sf(data = fema_fp, fill = "#004466", color = NA) +
         geom_sf(data = polluted_sites, aes(color = type)) + 
         theme_map() + 
@@ -146,6 +161,29 @@ ggplot() +
               plot.background = element_rect(fill = "white", color = NA))
 
 ggsave(filename = "data/output/EXP_SITES.png", 
+       dpi = 1000,
+       width = 15,
+       height = 22,
+       units = "cm",
+       limitsize = FALSE)
+
+### COMPARISON BETWEEN FEMA AND PLUVIAL LAYERS
+
+ggplot() +
+        geom_sf(data = depth100_sf, fill = "#1a8bc4", color = NA) +
+        geom_sf(data = fema_fp, fill = "#004466", color = NA) +
+        geom_sf(data = city_limit, fill = NA, color = "black") + 
+        theme_map() + 
+        labs(title = "FEMA RISK \n VS PLUVIAL") +
+        theme(title = element_text(size = 26),
+              legend.position = "none",
+              legend.text = element_text(size = 10),
+              legend.title = element_text(size = 15),
+              legend.spacing.x = unit(0.2, "cm"),
+              legend.key.size = unit(1, "cm",),
+              plot.background = element_rect(fill = "white", color = NA))
+
+ggsave(filename = "data/output/FEMA_VS_PLUVIAL.png", 
        dpi = 1000,
        width = 15,
        height = 22,
