@@ -1,5 +1,5 @@
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(data.table, nngeo, readxl, ggcorrplot, PerformanceAnalytics, usdm, stars, geojsonsf, geojsonio, terra, tidyr, ggplot2, ggthemes, ggpubr, gdalUtils, sf, dplyr, tidycensus, tidyverse)
+pacman::p_load(data.table, nngeo, readxl, ggcorrplot, PerformanceAnalytics, colorspace, usdm, stars, geojsonsf, geojsonio, terra, tidyr, ggplot2, ggthemes, ggpubr, gdalUtils, sf, dplyr, tidycensus, tidyverse)
 
 options(tigris_class = "sf")
 
@@ -193,17 +193,24 @@ hotspot_classifier <- function(df, field_quantilize, threshold=0.8, positive=TRU
   
 }
 
-mapper_function_quintile <- function(data_df, fieldname, map_title, legend_position="none", title_size=36){
+mapper_function_quintile <- function(data_df, fieldname, map_title, legend_position="none", title_size=36, palette="default"){
   
   
-  if(length(unique(quintile_label(data_df, fieldname)))== 5)  {
+  if(palette == "default"){
     scale_palette <- c("#CCE0EB", "#99C2D6", "#67A3C2","#3485AD", "#016699")
+  } else {
+    scale_palette <- palette
+  }
+  
+    
+  if(length(unique(quintile_label(data_df, fieldname)))== 5)  {
+    scale_palette <- scale_palette
   } else if (length(unique(quintile_label(data_df, fieldname)))== 4) {
-    scale_palette <- c("#CCE0EB", "#99C2D6","#3485AD", "#016699")
+    scale_palette <- scale_palette[c(TRUE, TRUE, FALSE, TRUE, TRUE)]
   } else if (length(unique(quintile_label(data_df, fieldname)))== 3) {
-    scale_palette <- c("#CCE0EB", "#67A3C2","#016699")
+    scale_palette <- scale_palette[c(TRUE, FALSE, TRUE, FALSE, TRUE)]
   } else if (length(unique(quintile_label(data_df, fieldname)))== 2) {
-    scale_palette <- c("#CCE0EB", "#016699")
+    scale_palette <- scale_palette[c(TRUE, FALSE, FALSE, FALSE, TRUE)]
   }
   
   plot <- ggplot() +
@@ -235,13 +242,13 @@ mapper_function_0_100 <- function(data_sf,
           legend.title = element_text(size = 30),
           legend.spacing.x = unit(0.2, "cm"),
           legend.key.size = unit(1, "cm",),
-          plot.background = element_rect(fill = "white")) + 
+          plot.background = element_rect(fill = "white", color = NA)) + 
     labs(title = plot_title) +
     scale_fill_gradientn(colours = palette, 
                          breaks = breaks,
                          labels = breaks_labels,
                          name= legend_name,
-                         limits = c(0,100))
+                         limits = c(0,101))
   
   return(plot)
 }
