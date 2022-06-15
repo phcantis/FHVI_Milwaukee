@@ -8,9 +8,10 @@
 
 ## STEPS TAKEN:
 
-## STEP 1: 
-## STEP 2: 
-## STEP 3: 
+## STEP 1: LOAD LISTS OF VARS TO DIG INTO CENSUS DATA VIA TIDYCENSUS
+## STEP 2: DOWNLOAD CENSUS DATA FROM ACS AND DECENNIAL CENSUS 2010
+## STEP 3: JOIN ACS AND DECENNIAL CENSUS TABLES INTO A SINGLE FILE
+## STEP 4: LOAD RESIDENTIAL PARCELS AND CALCULATE % BUILT PRE-1950 PER CENSUS TRACT
 
 source("src/FHVI_housekeeping_GIS_vars.R")
 
@@ -159,17 +160,17 @@ MKE_ct_data_vulnerability <- inner_join(MKE_ACS2019_selection, st_drop_geometry(
   st_transform(UTM_16N_meter)
 
 ### CORRELATION PLOT / VIF TO CHECK HO COLLINEAR VARIABLES ARE
-graf <- ggpairs(st_drop_geometry(select(MKE_ct_data_vulnerability, -c(ALAND, GEOID))), 
-                upper = list(continuous = wrap("cor", size = 2.5)))
+# graf <- ggpairs(st_drop_geometry(select(MKE_ct_data_vulnerability, -c(ALAND, GEOID))), 
+#                 upper = list(continuous = wrap("cor", size = 2.5)))
 
-ggplotly(graf)
+# ggplotly(graf)
 
-usdm::vif(st_drop_geometry(select(MKE_ct_data_vulnerability, -c(ALAND, GEOID))))
+# usdm::vif(st_drop_geometry(select(MKE_ct_data_vulnerability, -c(ALAND, GEOID))))
 
 ### LOOKS GOOD! 
 
 ## STEP 4: LOAD RESIDENTIAL PARCELS AND CALCULATE % BUILT PRE-1950 PER CENSUS TRACT
-### RESIDENTIAL PARCELS BUILT BEFORE 1800 WILL BE EXCLUDED ASSSUMING DATA IS WR
+### RESIDENTIAL PARCELS BUILT BEFORE 1800 WILL BE EXCLUDED ASSSUMING DATA IS WRONG
 
 ### SPATIAL PARCEL DATA IS EXTRACTED FROM HERE https://data.milwaukee.gov/dataset/parcel-outlines
 parcels_pre_1950 <- st_read("data/raw/MPROPArchive2021.shp") %>%
@@ -201,3 +202,5 @@ MKE_ct_data_vulnerability_housing <- left_join(MKE_ct_data_vulnerability, ct_pre
 st_write(MKE_ct_data_vulnerability_housing, 
          "data/intermediate/selected/selected_sovi_variables.shp",
          delete_dsn = TRUE)
+
+rm(list = ls())
