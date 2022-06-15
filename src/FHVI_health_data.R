@@ -150,7 +150,7 @@ df_correlate <- MWK_health_data %>%
   st_drop_geometry
 
 ### CORRELATION MATRIX
-chart.Correlation(df_correlate, histogram=TRUE, pch=19)
+# chart.Correlation(df_correlate, histogram=TRUE, pch=19)
 
 ### THE CHART THAT APPEARS SHOWS HEAVY CORRELATIONS FOR SOME VARIABLES! BUT THE CORRELATIONS SHOWN ARE 
 ### A SERIES OF 1to1 ASSESSMENTS BETWEEN VARIABLE PAIRS. USING THE VARIANCE INFLATION FACTOR (VIF), WE CAN
@@ -165,25 +165,25 @@ usdm::vif(df_correlate)
 
 ### SCENARIO I: COPD, ADULTS WITH DIABETES, POOR MENTAL HEALTH IN ADULTS, PEDIATRIC ASTHMA
 ### MAXIMUM VIF IS 11 DUE TO THE HEAVY CORRELATION BETWEEN COPD AND DIABETES
-usdm::vif(dplyr::select(df_correlate, c(copd_rate, addiab_rate, poormh_rate, pedast_rate)))
+# usdm::vif(dplyr::select(df_correlate, c(copd_rate, addiab_rate, poormh_rate, pedast_rate)))
 
-chart.Correlation(select(df_correlate, c(copd_rate, addiab_rate, poormh_rate, pedast_rate)), histogram=TRUE, pch=19)
+# chart.Correlation(select(df_correlate, c(copd_rate, addiab_rate, poormh_rate, pedast_rate)), histogram=TRUE, pch=19)
 
 ### SCENARIO II: COPD, ADULTS WITH DIABETES, POOR MENTAL HEALTH IN ADULTS, PEDIATRIC ASTHMA, HEART FAILURE
 ### THE VIF FACTOR INCREASES A BIT (UP TO 12) DUE TO THE HIGH CORRELATION BETWEEN PEDIATRIC ASTHMA AND HEART FAILURE RATES.
 ### THIS INCREASE MAY NOT NECESSARILY BE RELEVANT.
 
-usdm::vif(dplyr::select(df_correlate, c(copd_rate, addiab_rate, poormh_rate, pedast_rate, heartf_rate)))
+# usdm::vif(dplyr::select(df_correlate, c(copd_rate, addiab_rate, poormh_rate, pedast_rate, heartf_rate)))
 
-chart.Correlation(select(df_correlate, c(copd_rate, addiab_rate, poormh_rate, pedast_rate, heartf_rate)), histogram=TRUE, pch=19)
+# chart.Correlation(select(df_correlate, c(copd_rate, addiab_rate, poormh_rate, pedast_rate, heartf_rate)), histogram=TRUE, pch=19)
 
 
 ### REPLACING COPD AND PEDIATRIC ASTHMA WITH AGE-ADJUSTED ASTHMA ER RATES
 ### VIF AND CORRELATIONS ARE LOWEST UNDER THIS SCENARIO, AND HENCE HAS BEEN SELECTED AS THE SET OF HEALTH
 ## VARIABLES TO CONSIDER IN THE INDEX ALONG WITH DISABILITY RATE (OBTAINED FROM THE ACS IN A SEPARATE SCRIPT)
-usdm::vif(dplyr::select(df_correlate, c(addiab_rate, poormh_rate, asthma_rate)))
+# usdm::vif(dplyr::select(df_correlate, c(addiab_rate, poormh_rate, asthma_rate)))
 
-chart.Correlation(select(df_correlate, c(addiab_rate, poormh_rate, asthma_rate)), histogram=TRUE, pch=19)
+# chart.Correlation(select(df_correlate, c(addiab_rate, poormh_rate, asthma_rate)), histogram=TRUE, pch=19)
 
 ## STEP 3: EXPORT SELECTED VARIABLES AS A CENSUS TRACTS SHAPEFILE
 ### SAVE SELECTED HEALTH VARIABLES, BEING:
@@ -195,18 +195,19 @@ st_write(select(MWK_health_data, c(GEOID, addiab_rate, poormh_rate, asthma_rate)
          "data/intermediate/selected/selected_health_variables.shp",
          delete_dsn = TRUE)
 
-# PCA 
+# # PCA 
+# 
+# myPr <- prcomp(drop_na(df_correlate), scale. = TRUE)
+# myPr
+# summary(myPr)
+# biplot(myPr, scale = 0, choices = c(1,2))
+# 
+# # PCA WITH SELECTED VARIABLES
+# 
+# myPr_reduced <- prcomp(select(df_correlate, c(addiab_rate, poormh_rate, asthma_rate)), scale. = TRUE)
+# myPr_reduced
+# summary(myPr_reduced)
+# biplot(myPr_reduced, scale = 0, choices = c(1,2))
 
-myPr <- prcomp(drop_na(df_correlate), scale. = TRUE)
-myPr
-summary(myPr)
-biplot(myPr, scale = 0, choices = c(1,2))
 
-# PCA WITH SELECTED VARIABLES
-
-myPr_reduced <- prcomp(select(df_correlate, c(addiab_rate, poormh_rate, asthma_rate)), scale. = TRUE)
-myPr_reduced
-summary(myPr_reduced)
-biplot(myPr_reduced, scale = 0, choices = c(1,2))
-
-
+rm(list = ls())
