@@ -285,3 +285,32 @@ st_dissolve <- function(sf_obj, field.var, cast_to="POLYGON"){
   return(dissolved)
   
 }
+
+hotspot_classifier <- function(df, field_quantilize, threshold=0.8, positive=TRUE, stars=FALSE, drop_geom=TRUE){
+  
+  if(stars==TRUE) {
+    
+    input_save <- df
+    
+    df <- st_as_sf(df)
+    
+  } 
+  
+  if(drop_geom==TRUE){
+    df_aux <- (df[,field_quantilize]) %>% st_drop_geometry()
+  } else {df_aux <- (df[,field_quantilize])}
+  
+  Q_hotspot <- as.numeric(quantile(df_aux[,field_quantilize,], threshold, na.rm = TRUE))
+  
+  if (positive == TRUE){
+    df_aux[, "Hotspot"] <- 0
+    df_aux[df_aux[,field_quantilize] > Q_hotspot,"Hotspot"] <- 1
+  } else {
+    df_aux[, "Hotspot"] <- 1
+    df_aux[df_aux[,field_quantilize] > Q_hotspot,"Hotspot"] <- 0
+  }
+  
+  return (as.integer(df_aux$Hotspot))
+  
+}
+
