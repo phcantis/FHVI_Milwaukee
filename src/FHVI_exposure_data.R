@@ -217,3 +217,5 @@ exposure_GEOID <- MKE_cen10 %>%
 st_write(exposure_GEOID,
          "data/intermediate/selected/selected_exposure_variables.shp",
          delete_dsn = TRUE)
+
+rm(list = ls())
