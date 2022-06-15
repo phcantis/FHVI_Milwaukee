@@ -135,6 +135,16 @@ fema_fp <- st_read("data/raw/Wisconsin_NFHL_55_20220303/NFHL_55_20220303.gdb", l
         st_cast("POLYGON") %>%
         st_intersection(st_dissolve(MKE_cen10))
 
+st_write(depth100_sf,
+         "data/output/precipitation_flooding_4inches_100years.geojson",
+         delete_dsn=TRUE)
+
+st_write(fema_fp,
+         "data/output/FEMA_flooding_100yrs_SFHA.geojson",
+         delete_dsn=TRUE)
+
+
+
 polluted_sites <- st_read("data/intermediate/polluted_sites.shp")
 
 ggplot() +
