@@ -9,10 +9,14 @@
 ## STEP 1: LOAD THE 4 CATEGORIES CONSIDERED, MERGE INTO A SINGLE DATASET AND RENAME INDICATORS BY CATEGORY
 ## STEP 2: NORMALIZE, GROUP AND BLEND THE INDICATORS WITHIN EACH CATEGORY
 
-source("src/FHVI_housekeeping_GIS_vars.R")
-
 ## STEP 1: LOAD THE 4 CATEGORIES CONSIDERED, MERGE INTO A SINGLE DATASET AND RENAME INDICATORS BY CATEGORY
 ### CATEGORIES: SOCIOECONOMIC VULNERABILITY, HEALTH, HOUSING, EXPOSURE
+
+source("src/FHVI_health_data.R")
+source("src/FHVI_census_sovi_data.R")
+source("src/FHVI_exposure_data.R")
+
+source("src/FHVI_housekeeping_GIS_vars.R")
 
 SES <- st_read("data/intermediate/selected/selected_sovi_variables.shp")
 health <- st_read("data/intermediate/selected/selected_health_variables.shp")
@@ -85,6 +89,48 @@ indicators_FHVI <- indicators_FHVI %>%
   mutate(V_x_EXP_Q5 = V_Q5_sum * EXP_Q5_sum,
          V_x_EXP_n = normalize((V_n_sum * EXP_n_sum), output_range = c(0,100)))
 
+### CATEGORIZE AS HOTSPOT BASED ON SV AND EXP
+indicators_FHVI$V_H <- hotspot_classifier(indicators_FHVI, "V_n_sum", threshold = 0.75)
+indicators_FHVI$E_H <- hotspot_classifier(indicators_FHVI, "EXP_n_sum", threshold = 0.75)
+
+### Save all data:
 st_write(indicators_FHVI, 
          "data/output/final_FHVI.geojson",
+         delete_dsn = TRUE)
+
+### Save hotspots data
+hotspots_dataset <- indicators_FHVI %>% 
+  select(c(GEOID, V_H, E_H)) %>%
+  mutate(Hotspot = "") %>%
+  mutate(Hotspot = case_when(V_H == 1 & E_H == 1 ~ "Vulnerability and Exposure Hotspot",
+                             V_H == 1 & E_H == 0 ~ "Vulnerability Hotspot",
+                             V_H == 0 & E_H == 1 ~ "Exposure Hotspot",))
+
+st_write(hotspots_dataset, 
+         "data/output/final_FHVI_hotspots.geojson",
+         delete_dsn = TRUE)
+
+### Save Exposure data
+st_write(select(indicators_FHVI, c(GEOID, EXP_RES, EXP_RES_n, EXP_ROAD, EXP_ROAD_n, EXP_n_sum)), 
+         "data/output/final_FHVI_exposure.geojson",
+         delete_dsn = TRUE)
+
+### Save SV data
+st_write(select(indicators_FHVI, c(GEOID, V_n_sum, HV_n, SEV_n, HoV_n)), 
+         "data/output/final_FHVI_SV.geojson",
+         delete_dsn = TRUE)
+
+### Save SV_Health data
+st_write(select(indicators_FHVI, c(GEOID, HV_n, HV_AdultDiabetesRate, HV_PoorMentalHealthRate, HV_AsthmaERRate, HV_Disability, HV_NoHIns)), 
+         "data/output/final_FHVI_HV.geojson",
+         delete_dsn = TRUE)
+
+### Save SV_SEV data
+st_write(select(indicators_FHVI, c(GEOID, SEV_n, SEV_BelPovx2, SEV_NoDiploma, SEV_LangIsol, SEV_BIPOC, SEV_VulnAge)), 
+         "data/output/final_FHVI_SEV.geojson",
+         delete_dsn = TRUE)
+
+### Save SV_Housing data
+st_write(select(indicators_FHVI, c(GEOID, HoV_n, HoV_LiveAlone, HoV_Pre50, HoV_HHNoCar)), 
+         "data/output/final_FHVI_HoV.geojson",
          delete_dsn = TRUE)
