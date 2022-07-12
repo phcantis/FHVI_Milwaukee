@@ -108,7 +108,7 @@ SEV_LangIsol - Percentage of the population above 5 years old that did speaks En
 
 SEV_BIPOC - Percentage of the total population that was described as Black, Indigenous or Person of Color in the decennial census in 2010.
 
-SEV_VulnAge  - Percentage of the total population younger than 18 years old or older than 65 years old.
+SEV_VulnAge - Percentage of the total population younger than 18 years old or older than 65 years old.
 
 HoV_LiveAlone - Percentage of the tract's households with a single adult living alone.
 
@@ -136,9 +136,9 @@ SEV_n - Socioeconomic vulnerability index, normalized to a 0-100 range.
 
 HoV_n - Housing vulnerability index, normalized to a 0-100 range.
 
-EXP_RES_n  - Percentage of the tract's residential units impacted by flooding, normalized to a 0-100 range.
+EXP_RES_n - Percentage of the tract's residential units impacted by flooding, normalized to a 0-100 range.
 
-EXP_ROAD_n  - Percentage of the tract's total road area impacted by flooding, normalized to a 0-100 range.
+EXP_ROAD_n - Percentage of the tract's total road area impacted by flooding, normalized to a 0-100 range.
 
 EXP_SITES_n - Percentage of the tract's polluted sites impacted by flooding, normalized to a 0-100 range (this metric was not included in the indices, as of now).
 
