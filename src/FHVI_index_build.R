@@ -66,7 +66,7 @@ indicators_FHVI <- indicators_FHVI %>%
            normalize(SEV_VulnAge, output_range = c(0,100)),
          HoV = normalize(HoV_LiveAlone, output_range = c(0,100)) +
            normalize(HoV_Pre50, output_range = c(0,100)) +
-           normalize(HoV_HHNoCar, output_range = c(0,100)))
+           normalize(HoV_HHNoCar, output_range = c(0,100))) %>% 
   mutate(HV_n = normalize(HV, output_range = c(0, 100)),
          SEV_n = normalize(SEV, output_range = c(0, 100)),
          HoV_n = normalize(HoV, output_range = c(0, 100)),
@@ -100,14 +100,15 @@ hotspots_dataset <- indicators_FHVI %>%
   mutate(Hotspot = "") %>%
   mutate(Hotspot = case_when(V_H == 1 & E_H == 1 ~ "Vulnerability and Exposure Hotspot",
                              V_H == 1 & E_H == 0 ~ "Vulnerability Hotspot",
-                             V_H == 0 & E_H == 1 ~ "Exposure Hotspot",))
+                             V_H == 0 & E_H == 1 ~ "Exposure Hotspot",
+                             V_H == 0 & E_H == 0 ~ "Not a Hotspot"))
 
 st_write(hotspots_dataset, 
          "data/output/final_FHVI_hotspots.geojson",
          delete_dsn = TRUE)
 
 ### Save Exposure data
-st_write(select(indicators_FHVI, c(GEOID, EXP_RES, EXP_RES_n, EXP_ROAD, EXP_ROAD_n, EXP_n_sum)), 
+st_write(select(indicators_FHVI, c(GEOID, EXP_RES_n, EXP_ROAD_n, EXP_n_sum)), 
          "data/output/final_FHVI_exposure.geojson",
          delete_dsn = TRUE)
 

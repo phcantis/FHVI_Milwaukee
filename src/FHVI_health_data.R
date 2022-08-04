@@ -181,9 +181,9 @@ usdm::vif(df_correlate)
 ### REPLACING COPD AND PEDIATRIC ASTHMA WITH AGE-ADJUSTED ASTHMA ER RATES
 ### VIF AND CORRELATIONS ARE LOWEST UNDER THIS SCENARIO, AND HENCE HAS BEEN SELECTED AS THE SET OF HEALTH
 ## VARIABLES TO CONSIDER IN THE INDEX ALONG WITH DISABILITY RATE (OBTAINED FROM THE ACS IN A SEPARATE SCRIPT)
-# usdm::vif(dplyr::select(df_correlate, c(addiab_rate, poormh_rate, asthma_rate)))
+# usdm::vif(dplyr::select(df_correlate, c(addiab_rate, poormh_rate, asthma_rate, heartf_rate)))
 
-# chart.Correlation(select(df_correlate, c(addiab_rate, poormh_rate, asthma_rate)), histogram=TRUE, pch=19)
+# chart.Correlation(select(df_correlate, c(addiab_rate, poormh_rate, asthma_rate, heartf_rate)), histogram=TRUE, pch=19)
 
 ## STEP 3: EXPORT SELECTED VARIABLES AS A CENSUS TRACTS SHAPEFILE
 ### SAVE SELECTED HEALTH VARIABLES, BEING:

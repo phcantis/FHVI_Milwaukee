@@ -123,8 +123,8 @@ st_write(res_parcels,
 # SUMMARIZE TO GEOID LEVEL (% UNITS EXPOSED TO FLOODING)
 exposed_units_GEOID <- res_parcels %>%
   st_drop_geometry() %>%
-  mutate(is_exposed = case_when(d_f <= 30 ~ "exp_unit",
-                             d_f > 30 ~ "unexp_unit")) %>%
+  mutate(is_exposed = case_when(d_f <= 10 ~ "exp_unit",
+                             d_f > 10 ~ "unexp_unit")) %>%
   dplyr::group_by(GEOID, is_exposed) %>%
   dplyr::summarise(n_res = sum(NR_UNITS, na.rm = TRUE)) %>%
   pivot_wider(names_from = is_exposed, values_from = n_res) %>% 
@@ -197,8 +197,8 @@ st_write(polluted_sites,
 
 polluted_sites_GEOID <- polluted_sites %>%
   st_drop_geometry() %>%
-  mutate(is_exposed = case_when(d_f <= 30 ~ "exp_site",
-                                d_f > 30 ~ "unexp_site")) %>%
+  mutate(is_exposed = case_when(d_f <= 10 ~ "exp_site",
+                                d_f > 10 ~ "unexp_site")) %>%
   group_by(GEOID, is_exposed) %>%
   summarise(total_sites = n()) %>%
   pivot_wider(names_from = is_exposed, values_from = total_sites) %>%

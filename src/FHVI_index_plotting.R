@@ -65,7 +65,7 @@ ggsave(filename = "data/output/EXP_ROADandRES_n.png",
        units = "cm",
        limitsize = FALSE)
 
-mapper_function_quintile(indicators_FHVI, fieldname = "V_n_sum", legend_position = "right", map_title="Social Vulnerability \nPrototype \n[confidential]", palette = rev(sequential_hcl(5, "YlOrRd")))
+mapper_function_quintile(indicators_FHVI, fieldname = "V_n_sum", legend_position = "right", map_title="Social Vulnerability", palette = rev(sequential_hcl(5, "YlOrRd")))
 
 ggsave(filename = "data/output/SVI_n.png", 
        dpi = 1000,
@@ -194,6 +194,37 @@ ggplot() +
               plot.background = element_rect(fill = "white", color = NA))
 
 ggsave(filename = "data/output/FEMA_VS_PLUVIAL.png", 
+       dpi = 1000,
+       width = 15,
+       height = 22,
+       units = "cm",
+       limitsize = FALSE)
+
+hotspots_dataset <- st_read("data/output/final_FHVI_hotspots.geojson")
+hotspots_dataset$Hotspot <- factor(hotspots_dataset$Hotspot, levels = c("Vulnerability and Exposure Hotspot",
+                                                                        "Vulnerability Hotspot",
+                                                                        "Exposure Hotspot",
+                                                                        "Not a Hotspot"))
+
+ggplot() +
+        geom_sf(data = hotspots_dataset, aes(fill = Hotspot)) +
+        theme_map()  +
+        theme(title = element_text(size = 26),
+              legend.text = element_text(size = 10),
+              legend.title = element_text(size = 15),
+              legend.spacing.x = unit(0.2, "cm"),
+              legend.key.size = unit(1, "cm",),
+              legend.position = c(0.64,0.7),
+              plot.background = element_rect(fill = "white", color = NA)) +
+        scale_fill_manual(values = c("#BE3526", "#F99C1C", "#004466", "#DDDDDD"),
+                          name = "FHVA - Hotspots",
+                          labels = c("Vulnerability and Exposure",
+                                     "Vulnerability",
+                                     "Exposure",
+                                     "Not a Hotspot"))
+        
+
+ggsave(filename = "data/output/HOTSPOTS.png", 
        dpi = 1000,
        width = 15,
        height = 22,
